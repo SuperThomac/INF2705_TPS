@@ -4,6 +4,8 @@ uniform int coulProfondeur;
 const float debAttenuation = 30.0;
 const float finAttenuation = 50.0;
 
+uniform vec4 planCoupe; // équation du plan de coupe
+
 in Attribs {
    vec4 couleur;
 } AttribsIn;

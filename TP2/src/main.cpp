@@ -447,11 +447,14 @@ void FenetreTP::afficherScene( )
 
    // afficher le modèle et tenir compte du stencil et du plan de coupe
    // partie 1: modifs ici ...
-   afficherQuad( 0.25 );
+   glEnable( GL_CLIP_PLANE0 );
+
    afficherModele();
 
    // en plus, dessiner le plan en transparence pour bien voir son étendue
    afficherQuad( 0.25 );
+   glDisable( GL_CLIP_PLANE0 );
+
 }
 
 void FenetreTP::redimensionner( GLsizei w, GLsizei h )
