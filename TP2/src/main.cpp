@@ -447,9 +447,6 @@ void FenetreTP::afficherScene( )
 
    // afficher le modèle et tenir compte du stencil et du plan de coupe
    // partie 1: modifs ici ...
-   glEnable( GL_STENCIL_TEST);
-   glStencilFunc( GL_NEVER, 1, 1 );
-   glStencilOp( GL_REPLACE, GL_REPLACE, GL_REPLACE );
    afficherQuad( 0.25 );
    afficherModele();
 
