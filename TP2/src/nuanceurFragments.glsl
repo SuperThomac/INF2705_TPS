@@ -4,7 +4,6 @@ uniform int coulProfondeur;
 const float debAttenuation = 30.0;
 const float finAttenuation = 50.0;
 
-uniform vec4 planCoupe; // équation du plan de coupe
 
 in Attribs {
    vec4 couleur;
@@ -14,6 +13,7 @@ out vec4 FragColor;
 
 void main( void )
 {
+	
    // la couleur du fragment est la couleur interpolée
    FragColor = AttribsIn.couleur;
 

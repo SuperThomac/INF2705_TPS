@@ -128,6 +128,7 @@ public:
 
             // la couleur du corps
             glVertexAttrib4fv( locColor, glm::value_ptr(couleur) );
+            glEnable( GL_BLEND );
 
             switch ( etat.modele )
             {
@@ -145,6 +146,7 @@ public:
                theiere->afficher( );
                break;
             }
+            glDisable( GL_BLEND );
 
          } matrModel.PopMatrix(); glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
 
@@ -385,18 +387,21 @@ void FenetreTP::conclure()
 
 void afficherQuad( GLfloat alpha ) // le plan qui ferme les solides
 {
-   const GLuint connec[] = { 0, 1, 2, 2, 3, 0 };
+   const GLuint connec[] = { 0, 1, 2, 2, 3, 0 }; // solution temporaire pour la connectivite
    glEnable( GL_BLEND );
-   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+   
    glVertexAttrib4f( locColor, 1.0, 1.0, 1.0, alpha );
-   // afficher le plan tourné selon l'angle courant et à la position courante
-   // partie 1: modifs ici ...
-   // ...
-   glBindVertexArray( vao );
-   glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, connec );
-   glBindVertexArray(0);
-   glDisable( GL_BLEND );
-   // ...
+   matrModel.PushMatrix(); {
+	matrModel.Translate(0,0,-etat.planCoupe.w);
+	matrModel.Rotate(etat.angleCoupe,0.0,1.0,0.0);
+	glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel);
+	glBindVertexArray( vao );
+	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, connec ); // normalement 0 a la place de connec
+	glBindVertexArray(0);
+   } matrModel.PopMatrix();
+   
+	glDisable( GL_BLEND );
+	
 }
 
 void afficherModele()
@@ -415,6 +420,7 @@ void afficherModele()
 
    // afficher le système solaire en commençant à la racine
    Soleil.afficher( );
+
 }
 
 void FenetreTP::afficherScene( )
@@ -443,17 +449,23 @@ void FenetreTP::afficherScene( )
    glUniformMatrix4fv( locmatrVisu, 1, GL_FALSE, matrVisu );
    glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
    glUniform4fv( locplanCoupe, 1, glm::value_ptr(etat.planCoupe) );
+   
+   glEnable( GL_CLIP_PLANE0 );
    glUniform1i( loccoulProfondeur, etat.coulProfondeur );
-
    // afficher le modèle et tenir compte du stencil et du plan de coupe
    // partie 1: modifs ici ...
-   glEnable( GL_CLIP_PLANE0 );
-
+   glEnable( GL_STENCIL_TEST);
+   glStencilFunc(GL_ALWAYS, 1, 1);
+   glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE);
+   glDisable(GL_DEPTH_TEST);
    afficherModele();
-
+   glEnable(GL_DEPTH_TEST);
+   glStencilFunc(GL_EQUAL, 0, 1);
    // en plus, dessiner le plan en transparence pour bien voir son étendue
    afficherQuad( 0.25 );
+   glDisable( GL_STENCIL_TEST);
    glDisable( GL_CLIP_PLANE0 );
+
 
 }
 
