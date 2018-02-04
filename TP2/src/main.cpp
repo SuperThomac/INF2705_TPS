@@ -325,13 +325,10 @@ void FenetreTP::initialiser()
    const GLuint connec[] = { 0, 1, 2, 2, 3, 0 };
 
    // partie 1: initialiser le VAO (quad)
-   // ...
-   // partie 1: créer les deux VBO pour les sommets et la connectivité
-   // ...
   glGenVertexArrays( 1, &vao );
-  
   glBindVertexArray( vao );
-  
+  // partie 1: créer les deux VBO pour les sommets et la connectivité
+
 // créer le VBO pour les sommets
   glGenBuffers(1, &vbo[0]);
   glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
@@ -340,7 +337,6 @@ void FenetreTP::initialiser()
   // lien avec le nuanceur de sommets
   glVertexAttribPointer( locVertex, 3, GL_FLOAT, GL_FALSE, 0, 0 );
   glEnableVertexAttribArray(locVertex);
-  glBindVertexArray(0);
   
   // créer le VBO la connectivité
   glGenBuffers(1, &vbo[1]);
@@ -387,7 +383,6 @@ void FenetreTP::conclure()
 
 void afficherQuad( GLfloat alpha ) // le plan qui ferme les solides
 {
-   const GLuint connec[] = { 0, 1, 2, 2, 3, 0 }; // solution temporaire pour la connectivite
    glEnable( GL_BLEND );
    
    glVertexAttrib4f( locColor, 1.0, 1.0, 1.0, alpha );
@@ -396,7 +391,7 @@ void afficherQuad( GLfloat alpha ) // le plan qui ferme les solides
 	matrModel.Rotate(etat.angleCoupe,0.0,1.0,0.0);
 	glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel);
 	glBindVertexArray( vao );
-	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, connec ); // normalement 0 a la place de connec
+	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0 );
 	glBindVertexArray(0);
    } matrModel.PopMatrix();
    
@@ -450,21 +445,29 @@ void FenetreTP::afficherScene( )
    glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
    glUniform4fv( locplanCoupe, 1, glm::value_ptr(etat.planCoupe) );
    
-   glEnable( GL_CLIP_PLANE0 );
    glUniform1i( loccoulProfondeur, etat.coulProfondeur );
+   
    // afficher le modèle et tenir compte du stencil et du plan de coupe
-   // partie 1: modifs ici ...
    glEnable( GL_STENCIL_TEST);
-   glStencilFunc(GL_ALWAYS, 1, 1);
-   glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE);
-   glDisable(GL_DEPTH_TEST);
+   
+   glStencilFunc(GL_ALWAYS, 1, 1);// on incremente partout la ou les planetes/orbites sont dessinés
+   glStencilOp( GL_KEEP, GL_KEEP, GL_INCR);
+   
+   glDisable(GL_DEPTH_TEST); // on desactive le test de profondeur pour s'assurer qu'on incremente
+   glEnable( GL_CLIP_PLANE0 ); // on active le plan de coupe et on trace le modele
    afficherModele();
-   glEnable(GL_DEPTH_TEST);
-   glStencilFunc(GL_EQUAL, 0, 1);
-   // en plus, dessiner le plan en transparence pour bien voir son étendue
-   afficherQuad( 0.25 );
-   glDisable( GL_STENCIL_TEST);
    glDisable( GL_CLIP_PLANE0 );
+   glEnable(GL_DEPTH_TEST);
+   
+   glStencilFunc(GL_EQUAL, 0, 1); // on trace le quad transparent partout ou le stencil vaut 0
+   glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP);
+   afficherQuad( 0.25 );
+   
+   glStencilFunc(GL_EQUAL, 1, 255); // on trace le quad blanc partout ou le stencil vaut 1 ou plus
+   glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP);
+   afficherQuad( 1 );
+   
+   glDisable( GL_STENCIL_TEST);
 
 
 }
