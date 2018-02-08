@@ -95,11 +95,11 @@ class CorpsCeleste
 {
 public:
    CorpsCeleste( float r, float dist, float rot, float rev, float vitRot, float vitRev,
-                 glm::vec4 coul=glm::vec4(1.,1.,1.,1.) ) :
+                 glm::vec4 coul=glm::vec4(1.,1.,1.,1.), glm::vec4 coulSel=glm::vec4(1.,1.,1.,1.) ) :
       rayon(r), distance(dist),
       rotation(rot), revolution(rev),
       vitRotation(vitRot), vitRevolution(vitRev),
-      couleur(coul)
+      couleur(coul), couleurSel(coulSel)
    { }
 
    void ajouteEnfant( CorpsCeleste &bebe )
@@ -127,8 +127,14 @@ public:
             glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
 
             // la couleur du corps
-            glVertexAttrib4fv( locColor, glm::value_ptr(couleur) );
-            glEnable( GL_BLEND );
+            if(!etat.modeSelection) {
+               glVertexAttrib4fv( locColor, glm::value_ptr(couleur) );
+		    } else {
+			   glVertexAttrib4fv( locColor, glm::value_ptr(couleurSel) );
+			}
+            if (couleur.a < 1.00) {
+				glDepthMask(GL_FALSE);
+			}
 
             switch ( etat.modele )
             {
@@ -146,7 +152,10 @@ public:
                theiere->afficher( );
                break;
             }
-            glDisable( GL_BLEND );
+            
+            if (couleur.a < 1.0){
+				glDepthMask(GL_TRUE);
+			}
 
          } matrModel.PopMatrix(); glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
 
@@ -168,25 +177,25 @@ public:
    float vitRotation;    // la vitesse de rotation
    float vitRevolution;  // la vitesse de révolution
    glm::vec4 couleur;    // la couleur du corps
-   //bool estSelectionne;  // le corps est sélectionné ?
-   //glm::vec3 couleurSel; // la couleur en mode sélection
+   bool estSelectionne;  // le corps est sélectionné ?
+   glm::vec4 couleurSel; // la couleur en mode sélection
 };
 
 //                     rayon  dist  rota revol vrota  vrevol
-CorpsCeleste Soleil(   4.00,  0.0,  0.0,  0.0, 0.05, 0.0,  glm::vec4(1.0, 1.0, 0.0, 0.5) );
+CorpsCeleste Soleil(   4.00,  0.0,  0.0,  0.0, 0.05, 0.0,  glm::vec4(1.0, 1.0, 0.0, 0.5), glm::vec4(1.0, 1.0, 0.0, 0.5)); // couleur de base identique phobos et europa, ganymede et deimos
 
-CorpsCeleste Terre(    0.70,  7.0, 30.0, 30.0, 2.5,  0.10, glm::vec4(0.5, 0.5, 1.0, 1.0) );
-CorpsCeleste Lune(     0.20,  1.5, 20.0, 30.0, 2.5, -0.35, glm::vec4(0.6, 0.6, 0.6, 1.0) );
+CorpsCeleste Terre(    0.70,  7.0, 30.0, 30.0, 2.5,  0.10, glm::vec4(0.5, 0.5, 1.0, 1.0), glm::vec4(0.5, 0.5, 1.0, 1.0));
+CorpsCeleste Lune(     0.20,  1.5, 20.0, 30.0, 2.5, -0.35, glm::vec4(0.6, 0.6, 0.6, 1.0), glm::vec4(0.6, 0.6, 0.6, 1.0));
 
-CorpsCeleste Mars(     0.50, 11.0, 20.0,140.0, 2.5,  0.13, glm::vec4(0.6, 1.0, 0.5, 1.0) );
-CorpsCeleste Phobos(   0.20,  1.0,  5.0, 15.0, 3.5,  1.7,  glm::vec4(0.4, 0.4, 0.8, 1.0) );
-CorpsCeleste Deimos(   0.25,  1.7, 10.0,  2.0, 4.0,  0.5,  glm::vec4(0.5, 0.5, 0.1, 1.0) );
+CorpsCeleste Mars(     0.50, 11.0, 20.0,140.0, 2.5,  0.13, glm::vec4(0.6, 1.0, 0.5, 1.0), glm::vec4(0.6, 1.0, 0.5, 1.0));
+CorpsCeleste Phobos(   0.20,  1.0,  5.0, 15.0, 3.5,  1.7,  glm::vec4(0.4, 0.4, 0.8, 1.0), glm::vec4(0.4, 0.8, 0.8, 1.0));
+CorpsCeleste Deimos(   0.25,  1.7, 10.0,  2.0, 4.0,  0.5,  glm::vec4(0.5, 0.5, 0.1, 1.0), glm::vec4(0.5, 0.3, 0.1, 1.0));
 
-CorpsCeleste Jupiter(  1.20, 16.0, 10.0, 40.0, 0.2,  0.02, glm::vec4(1.0, 0.5, 0.5, 1.0) );
-CorpsCeleste Io(       0.20,  1.7,  5.0,  1.5, 2.5,  4.3,  glm::vec4(0.7, 0.4, 0.5, 1.0) );
-CorpsCeleste Europa(   0.25,  2.5, 87.0, 11.9, 3.5,  3.4,  glm::vec4(0.4, 0.4, 0.8, 1.0) );
-CorpsCeleste Ganymede( 0.30,  3.1, 10.0, 42.4, 4.0,  1.45, glm::vec4(0.5, 0.5, 0.1, 1.0) );
-CorpsCeleste Callisto( 0.35,  4.0, 51.0, 93.1, 1.0,  0.45, glm::vec4(0.7, 0.5, 0.1, 1.0) );
+CorpsCeleste Jupiter(  1.20, 16.0, 10.0, 40.0, 0.2,  0.02, glm::vec4(1.0, 0.5, 0.5, 1.0), glm::vec4(1.0, 0.5, 0.5, 1.0));
+CorpsCeleste Io(       0.20,  1.7,  5.0,  1.5, 2.5,  4.3,  glm::vec4(0.7, 0.4, 0.5, 1.0), glm::vec4(0.7, 0.4, 0.5, 1.0));
+CorpsCeleste Europa(   0.25,  2.5, 87.0, 11.9, 3.5,  3.4,  glm::vec4(0.4, 0.4, 0.8, 1.0), glm::vec4(0.4, 0.4, 0.8, 1.0));
+CorpsCeleste Ganymede( 0.30,  3.1, 10.0, 42.4, 4.0,  1.45, glm::vec4(0.5, 0.5, 0.1, 1.0), glm::vec4(0.5, 0.5, 0.1, 1.0));
+CorpsCeleste Callisto( 0.35,  4.0, 51.0, 93.1, 1.0,  0.45, glm::vec4(0.7, 0.5, 0.1, 1.0), glm::vec4(0.7, 0.5, 0.1, 1.0));
 
 
 void calculerPhysique( )
@@ -254,7 +263,7 @@ void chargerNuanceurs()
       const GLchar *chainesSommets = ProgNuanceur::lireNuanceur( "nuanceurSommets.glsl" );
       if ( chainesSommets != NULL )
       {
-         GLuint nuanceurObj = glCreateShader( GL_VERTEX_SHADER );
+	     GLuint nuanceurObj = glCreateShader( GL_VERTEX_SHADER );
          glShaderSource( nuanceurObj, 1, &chainesSommets, NULL );
          glCompileShader( nuanceurObj );
          glAttachShader( prog, nuanceurObj );
@@ -325,25 +334,25 @@ void FenetreTP::initialiser()
    const GLuint connec[] = { 0, 1, 2, 2, 3, 0 };
 
    // partie 1: initialiser le VAO (quad)
-  glGenVertexArrays( 1, &vao );
-  glBindVertexArray( vao );
+   glGenVertexArrays( 1, &vao );
+   glBindVertexArray( vao );
   // partie 1: créer les deux VBO pour les sommets et la connectivité
 
-// créer le VBO pour les sommets
-  glGenBuffers(1, &vbo[0]);
-  glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
-  glBufferData( GL_ARRAY_BUFFER, sizeof(coo), coo, GL_STATIC_DRAW );
+  //créer le VBO pour les sommets
+   glGenBuffers(1, &vbo[0]);
+   glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
+   glBufferData( GL_ARRAY_BUFFER, sizeof(coo), coo, GL_STATIC_DRAW );
   
   // lien avec le nuanceur de sommets
-  glVertexAttribPointer( locVertex, 3, GL_FLOAT, GL_FALSE, 0, 0 );
-  glEnableVertexAttribArray(locVertex);
+   glVertexAttribPointer( locVertex, 3, GL_FLOAT, GL_FALSE, 0, 0 );
+   glEnableVertexAttribArray(locVertex);
   
   // créer le VBO la connectivité
-  glGenBuffers(1, &vbo[1]);
-  glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo[1] );
-  glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(connec), connec, GL_STATIC_DRAW );
-
-  glBindVertexArray(0);
+   glGenBuffers(1, &vbo[1]);
+   glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbo[1] );
+   glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(connec), connec, GL_STATIC_DRAW );
+ 
+   glBindVertexArray(0);
 
 
    // construire le graphe de scène
@@ -383,8 +392,6 @@ void FenetreTP::conclure()
 
 void afficherQuad( GLfloat alpha ) // le plan qui ferme les solides
 {
-   glEnable( GL_BLEND );
-   
    glVertexAttrib4f( locColor, 1.0, 1.0, 1.0, alpha );
    matrModel.PushMatrix(); {
 	matrModel.Translate(0,0,-etat.planCoupe.w);
@@ -393,10 +400,7 @@ void afficherQuad( GLfloat alpha ) // le plan qui ferme les solides
 	glBindVertexArray( vao );
 	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0 );
 	glBindVertexArray(0);
-   } matrModel.PopMatrix();
-   
-	glDisable( GL_BLEND );
-	
+   } matrModel.PopMatrix();	
 }
 
 void afficherModele()
@@ -444,32 +448,37 @@ void FenetreTP::afficherScene( )
    glUniformMatrix4fv( locmatrVisu, 1, GL_FALSE, matrVisu );
    glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
    glUniform4fv( locplanCoupe, 1, glm::value_ptr(etat.planCoupe) );
-   
    glUniform1i( loccoulProfondeur, etat.coulProfondeur );
    
    // afficher le modèle et tenir compte du stencil et du plan de coupe
    glEnable( GL_STENCIL_TEST);
+   glEnable( GL_BLEND);
    
-   glStencilFunc(GL_ALWAYS, 1, 1);// on incremente partout la ou les planetes/orbites sont dessinés
-   glStencilOp( GL_KEEP, GL_KEEP, GL_INCR);
+   glStencilFunc(GL_ALWAYS, 1, 1);
+   glStencilOp( GL_INCR, GL_INCR, GL_INCR); // on incremente le stencil la ou le modele est trace
    
-   glDisable(GL_DEPTH_TEST); // on desactive le test de profondeur pour s'assurer qu'on incremente
-   glEnable( GL_CLIP_PLANE0 ); // on active le plan de coupe et on trace le modele
+   glEnable( GL_CLIP_PLANE0 );
    afficherModele();
    glDisable( GL_CLIP_PLANE0 );
-   glEnable(GL_DEPTH_TEST);
    
-   glStencilFunc(GL_EQUAL, 0, 1); // on trace le quad transparent partout ou le stencil vaut 0
-   glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP);
+   glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP); 
+   glStencilFunc(GL_EQUAL, 0, 1); // affichage du quad transparent la ou le stencil vaut 0
    afficherQuad( 0.25 );
+   if(!etat.modeSelection) {
+      glStencilFunc(GL_EQUAL, 1, 1); // affichage du quad blanc la ou le stencil vaut 1 ou plus
+      afficherQuad( 1 );
+      glDisable( GL_BLEND );
+      glDisable( GL_STENCIL_TEST);
+   } else {
+      glFinish();
+      GLint cloture[4]; glGetIntegerv( GL_VIEWPORT, cloture );
+      GLint posX = etat.sourisPosPrec.x, posY = cloture[3]-etat.sourisPosPrec.y;
+      glReadBuffer( GL_BACK );
+      GLubyte couleur[4];
+      glReadPixels( posX, posY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, couleur );
+      std::cout << "couleur = " << (int) couleur[0] << " " << (int) couleur[1] << " " << (int) couleur[2] << std::endl;      
+   }
    
-   glStencilFunc(GL_EQUAL, 1, 255); // on trace le quad blanc partout ou le stencil vaut 1 ou plus
-   glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP);
-   afficherQuad( 1 );
-   
-   glDisable( GL_STENCIL_TEST);
-
-
 }
 
 void FenetreTP::redimensionner( GLsizei w, GLsizei h )

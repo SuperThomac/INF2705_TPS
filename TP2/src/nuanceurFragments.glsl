@@ -21,15 +21,15 @@ void main( void )
    if ( coulProfondeur == 1 )
    {
       // Obtenir la distance à la caméra du sommet dans le repère de la caméra
-      //float dist = ...;
+      float dist = gl_FragCoord.z / gl_FragCoord.w;
       // Obtenir un facteur d'interpolation entre 0 et 1
-      //float factDist = smoothstep( ... );
+      float factDist = smoothstep( debAttenuation, finAttenuation, dist );
       // Modifier la couleur du fragment en utilisant ce facteur
-      // ...
-
+      FragColor.w = (1 - factDist)*FragColor.a;
+      
       // pour déboguer et « voir » la dist, on peut utiliser:
       //FragColor = vec4( vec3(dist-floor(dist)), 1.0 );
-      //FragColor = vec4( vec3(factDist), 1.0 );
+      //FragColor = vec4( vec3( 1 - factDist), 1.0 );
    }
 
    // pour déboguer et « voir » le comportement de z ou w, on peut utiliser:
