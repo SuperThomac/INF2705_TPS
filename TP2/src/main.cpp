@@ -133,7 +133,7 @@ public:
 			   glVertexAttrib4fv( locColor, glm::value_ptr(couleurSel) );
 			}
             if (couleur.a < 1.00) {
-				glDepthMask(GL_FALSE);
+			   glDepthMask(GL_FALSE);
 			}
 
             switch ( etat.modele )
@@ -154,7 +154,7 @@ public:
             }
             
             if (couleur.a < 1.0){
-				glDepthMask(GL_TRUE);
+			   glDepthMask(GL_TRUE);
 			}
 
          } matrModel.PopMatrix(); glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
@@ -164,9 +164,11 @@ public:
 
    void avancerPhysique()
    {
-      const float dt = 0.5; // intervalle entre chaque affichage (en secondes)
-      rotation += dt * vitRotation;
-      revolution += dt * vitRevolution;
+	  if (!estSelectionne) {
+         const float dt = 0.5; // intervalle entre chaque affichage (en secondes)
+         rotation += dt * vitRotation;
+         revolution += dt * vitRevolution;
+      }
    }
 
    std::vector<CorpsCeleste*> enfants; // la liste des enfants
@@ -177,7 +179,7 @@ public:
    float vitRotation;    // la vitesse de rotation
    float vitRevolution;  // la vitesse de révolution
    glm::vec4 couleur;    // la couleur du corps
-   bool estSelectionne;  // le corps est sélectionné ?
+   bool estSelectionne = false;  // le corps est sélectionné ?
    glm::vec4 couleurSel; // la couleur en mode sélection
 };
 
@@ -188,7 +190,7 @@ CorpsCeleste Terre(    0.70,  7.0, 30.0, 30.0, 2.5,  0.10, glm::vec4(0.5, 0.5, 1
 CorpsCeleste Lune(     0.20,  1.5, 20.0, 30.0, 2.5, -0.35, glm::vec4(0.6, 0.6, 0.6, 1.0), glm::vec4(0.6, 0.6, 0.6, 1.0));
 
 CorpsCeleste Mars(     0.50, 11.0, 20.0,140.0, 2.5,  0.13, glm::vec4(0.6, 1.0, 0.5, 1.0), glm::vec4(0.6, 1.0, 0.5, 1.0));
-CorpsCeleste Phobos(   0.20,  1.0,  5.0, 15.0, 3.5,  1.7,  glm::vec4(0.4, 0.4, 0.8, 1.0), glm::vec4(0.4, 0.8, 0.8, 1.0));
+CorpsCeleste Phobos(   0.20,  1.0,  5.0, 15.0, 3.5,  1.7,  glm::vec4(0.4, 0.4, 0.8, 1.0), glm::vec4(0.4, 0.8, 0.8, 1.0)); // couleurSel varie pour Phobos et Deimos 
 CorpsCeleste Deimos(   0.25,  1.7, 10.0,  2.0, 4.0,  0.5,  glm::vec4(0.5, 0.5, 0.1, 1.0), glm::vec4(0.5, 0.3, 0.1, 1.0));
 
 CorpsCeleste Jupiter(  1.20, 16.0, 10.0, 40.0, 0.2,  0.02, glm::vec4(1.0, 0.5, 0.5, 1.0), glm::vec4(1.0, 0.5, 0.5, 1.0));
@@ -270,7 +272,7 @@ void chargerNuanceurs()
          ProgNuanceur::afficherLogCompile( nuanceurObj );
          delete [] chainesSommets;
       }
-#if 0
+#if 1
       // partie 2:
       const GLchar *chainesGeometrie = ProgNuanceur::lireNuanceur( "nuanceurGeometrie.glsl" );
       if ( chainesGeometrie != NULL )
@@ -394,14 +396,50 @@ void afficherQuad( GLfloat alpha ) // le plan qui ferme les solides
 {
    glVertexAttrib4f( locColor, 1.0, 1.0, 1.0, alpha );
    matrModel.PushMatrix(); {
-	matrModel.Translate(0,0,-etat.planCoupe.w);
-	matrModel.Rotate(etat.angleCoupe,0.0,1.0,0.0);
-	glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel);
-	glBindVertexArray( vao );
-	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0 );
-	glBindVertexArray(0);
+      matrModel.Translate(0,0,-etat.planCoupe.w);
+	  matrModel.Rotate(etat.angleCoupe,0.0,1.0,0.0);
+	  glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel);
+	  glBindVertexArray( vao );
+	  glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0 );
+	  glBindVertexArray(0);
    } matrModel.PopMatrix();	
 }
+
+void selectionnerCorpCeleste () {
+   glFinish();
+   GLint cloture[4]; glGetIntegerv( GL_VIEWPORT, cloture );
+   GLint posX = etat.sourisPosPrec.x, posY = cloture[3]-etat.sourisPosPrec.y;
+   glReadBuffer( GL_BACK );
+   GLubyte couleur[4];
+   glReadPixels( posX, posY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, couleur );
+   
+   // il faudrait convertir chaque valeur de couleurSel en byte pour eviter l'utilisation de nombre magique
+   // et permettre l'utilisation d'une boucle for
+   if(couleur[0] == 153 && couleur[1] == 255 && couleur[2] == 127 ) { // mars
+      Mars.estSelectionne = true;  
+   } else if (couleur[0] == 127 && couleur[1] == 76 && couleur[2] == 25) { // deimos
+      Deimos.estSelectionne = true;
+   } else if (couleur[0] == 102 && couleur[1] == 204 && couleur[2] == 204) { // phobos
+	  Phobos.estSelectionne = true;
+   } else if (couleur[0] == 127 && couleur[1] == 127 && couleur[2] == 255) { // terre
+	  Terre.estSelectionne = true;
+   } else if (couleur[0] == 153 && couleur[1] == 153 && couleur[2] == 153) { // lune
+	  Lune.estSelectionne = true;
+   } else if (couleur[0] == 255 && couleur[1] == 127 && couleur[2] == 127) { // jupiter
+	  Jupiter.estSelectionne = true;
+   } else if (couleur[0] == 102 && couleur[1] == 102 && couleur[2] == 204) { // europa
+	  Europa.estSelectionne = true;
+   } else if (couleur[0] == 127 && couleur[1] == 127 && couleur[2] == 25) { // ganymede
+	  Ganymede.estSelectionne = true;
+   } else if (couleur[0] == 178 && couleur[1] == 127 && couleur[2] == 25) { // callisto
+	  Callisto.estSelectionne = true;
+   } else if (couleur[0] == 178 && couleur[1] == 102 && couleur[2] == 127) { // io
+	  Io.estSelectionne = true;
+   }
+   glDisable( GL_BLEND );
+   glDisable( GL_STENCIL_TEST);
+}
+
 
 void afficherModele()
 {
@@ -430,7 +468,8 @@ void FenetreTP::afficherScene( )
    glUseProgram( progBase );
 
    // définir le pipeline graphique
-   matrProj.Perspective( 50.0, (GLdouble) largeur_ / (GLdouble) hauteur_, 0.1, 100.0 );
+   GLdouble aspect = (GLdouble) largeur_ / (GLdouble) hauteur_;
+   matrProj.Perspective( 50.0, 2.0*aspect, 0.1, 100.0 );
    glUniformMatrix4fv( locmatrProjBase, 1, GL_FALSE, matrProj );
 
    camera.definir();
@@ -470,20 +509,18 @@ void FenetreTP::afficherScene( )
       glDisable( GL_BLEND );
       glDisable( GL_STENCIL_TEST);
    } else {
-      glFinish();
-      GLint cloture[4]; glGetIntegerv( GL_VIEWPORT, cloture );
-      GLint posX = etat.sourisPosPrec.x, posY = cloture[3]-etat.sourisPosPrec.y;
-      glReadBuffer( GL_BACK );
-      GLubyte couleur[4];
-      glReadPixels( posX, posY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, couleur );
-      std::cout << "couleur = " << (int) couleur[0] << " " << (int) couleur[1] << " " << (int) couleur[2] << std::endl;      
+	   selectionnerCorpCeleste();
    }
-   
 }
 
 void FenetreTP::redimensionner( GLsizei w, GLsizei h )
 {
-   glViewport( 0, 0, w, h );
+   GLfloat W = w, H2 = 0.5*h; // H2 mesure la moitie de la hauteur totale de la fenetre
+   GLfloat v[]  = {
+      0, 0,  W, H2,
+      0, H2, W, H2,
+   };
+   glViewportArrayv( 0, 2, v );
 }
 
 void FenetreTP::clavier( TP_touche touche )
@@ -491,7 +528,7 @@ void FenetreTP::clavier( TP_touche touche )
    switch ( touche )
    {
    case TP_ECHAP:
-   case TP_q: // Quitter l'application
+   case TP_q: // Quitter l'application	
       quit();
       break;
 
