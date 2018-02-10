@@ -469,7 +469,7 @@ void FenetreTP::afficherScene( )
 
    // définir le pipeline graphique
    GLdouble aspect = (GLdouble) largeur_ / (GLdouble) hauteur_;
-   matrProj.Perspective( 50.0, 2.0*aspect, 0.1, 100.0 );
+   matrProj.Perspective( 50.0, 2.0 * aspect, 0.1, 100.0 );
    glUniformMatrix4fv( locmatrProjBase, 1, GL_FALSE, matrProj );
 
    camera.definir();
@@ -488,13 +488,13 @@ void FenetreTP::afficherScene( )
    glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
    glUniform4fv( locplanCoupe, 1, glm::value_ptr(etat.planCoupe) );
    glUniform1i( loccoulProfondeur, etat.coulProfondeur );
-   
    // afficher le modèle et tenir compte du stencil et du plan de coupe
    glEnable( GL_STENCIL_TEST);
    glEnable( GL_BLEND);
    
    glStencilFunc(GL_ALWAYS, 1, 1);
    glStencilOp( GL_INCR, GL_INCR, GL_INCR); // on incremente le stencil la ou le modele est trace
+   
    
    glEnable( GL_CLIP_PLANE0 );
    afficherModele();
@@ -515,7 +515,7 @@ void FenetreTP::afficherScene( )
 
 void FenetreTP::redimensionner( GLsizei w, GLsizei h )
 {
-   GLfloat W = w, H2 = 0.5*h; // H2 mesure la moitie de la hauteur totale de la fenetre
+   GLfloat W = w, H2 = 0.5*h; 
    GLfloat v[]  = {
       0, 0,  W, H2,
       0, H2, W, H2,
