@@ -4,7 +4,8 @@ Q1: Dans le nuanceur de sommets, si on souhaite calculer la profondeur du
     « out float profondeur = -( matrVisu * matrModel * Vertex ).z; »
 
     Pourquoi doit-on inverser le signe du résultat calculé ?
-
+	
+Car dans l'espace de la caméra (l'espace où tout est relatif à la caméra), la distance plane d'un vertex est la valeur z négative de ce vertex. Plus la valeur z est négative, plus le vertex ce trouve loin de la caméra. Plus simplement, pour la caméra, z est rentrant et donc pour avoir la distance objet/caméra on veut inverser la valeur z qu'on obtient ( valeur négative).
 
 Q2: Lorsqu'on calcule la distance à la caméra pour faire un effet de
     profondeur dans le nuanceur de fragments, que se passe-t-il si on
@@ -18,3 +19,11 @@ Q2: Lorsqu'on calcule la distance à la caméra pour faire un effet de
     « d = gl_FragCoord.w; » ?
 
     Comment expliquez-vous les comportements observés dans un cas ou l'autre?
+
+Dans les deux cas, l'attenuation de couleur semble ne plus fonctionner. Les couleurs sont modifier ainsi :       
+float factDist = smoothstep( debAttenuation, finAttenuation, dist ); // à l'aide de smoothstep, on calcul le facteur de distance
+FragColor.w = (1 - factDist)*FragColor.a; // à l'aide de se facteur on modifie l'alpha de la couleur du fragment.
+Le fait qu'on n'observe aucunne différence signifie que factDist = 1 dans ces deux cas. 
+Dans le nuanceur de fragment, gl_FragCoord contient (x, y, z, 1/w) ( donc gl_FragCoord.w = 1/w) tandit que dans les coordonné de fenêtre on a (x, y, z) avec z déjà divisé par w. Ainsi, si dans le nuanceur de fragment on veut récupérer la distance à la caméra original, il faut faire « d = gl_FragCoord.z / gl_FragCoord.w; ». Si on ne récupére que « d = gl_FragCoord.z; », on récupérera la valeur z de la fenêtre déja normalisé ( donc une position plus qu'une distance) et dans le cas « d = gl_FragCoord.w; » on obtiendra uniquement la valeur w utilisé dans la projection en perspective pour normalisé nos valeurs.
+
+
