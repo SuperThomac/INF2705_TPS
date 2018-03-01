@@ -61,6 +61,8 @@ layout(location=8) in vec4 TexCoord;
 out Attribs {
    vec4 couleur;
    vec3 normale;
+   vec3 lumDir;
+   vec3 obsVec;
 } AttribsOut;
 
 vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O )
@@ -77,9 +79,13 @@ void main( void )
    // couleur du sommet
    //AttribsOut.couleur = calculerReflexion( L, N, O );
    AttribsOut.couleur = Color; // à modifier!
-   AttribsOut.normale = matrNormale * Normal;
-   vec3 pos = vec3(matrVisu*matrModel*Vertex);  
- 
+   vec3 N = normalize(matrNormale * Normal);
+   AttribsOut.normale = clamp(N, 0.0, 1.0);
+
+   vec3 pos = vec3(matrVisu * matrModel * Vertex);
+   AttribsOut.lumDir = vec3((matrVisu * LightSource[0].position).xyz - pos);
+   AttribsOut.obsVec = normalize(-pos);
+
    //AttribsOut.lumiDir = (matrVisu * LightSource[0].position).xyz - pos; // vecteur direction L
    //AttribsOut.obsVec = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0)); // vecteur direction O 
 }

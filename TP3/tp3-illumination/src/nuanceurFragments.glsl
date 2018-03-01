@@ -64,8 +64,19 @@ float calculerSpot( in vec3 spotDir, in vec3 L )
 
 vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O )
 {
-   vec4 grisUniforme = vec4(0.7,0.7,0.7,1.0);
-   return( vec4(0.0) );
+  float reflectivity = 0;
+
+  if (utiliseBlinn) {
+    // Blinn
+    vec3 B = normalize(L + O);
+    reflectivity = max(dot(B, N), 0.0);
+  } else {
+    // Phong
+    vec3 R = reflect(-L, N); // réflexion de L par rapport à N
+    // produit scalaire pour la réflexion spéculaire (Phong)
+    reflectivity = max(dot(R, O), 0.0);
+  }
+  return (pow(reflectivity, FrontMaterial.shininess));
 }
 
 void main( void )
@@ -78,6 +89,21 @@ void main( void )
 
    // vec4 coul = calculerReflexion( L, N, O );
    // ...
+   vec3 L = normalize(AttribsIn.lumiDir);
+
+   if (typeIllumination != 1) {
+
+	float LdotN = dot(L, AttribsIn.normale); // produit scalaire L.N (source Lumineuse, Normale)
+	
+    // calcul de la composante diffuse
+    vec4 coul = FrontMaterial.diffuse * LightSource[0].diffuse * LdotN;
+    
+    // calcul de la composante spéculaire
+    vec3 O = normalize(AttribsIn.obsVec); // vecteur observateur
+
+    coul += FrontMaterial.specular * LightSource[0].specular *
+            calculerReflexion(L, AttribsIn.normale, O);
+	}
    vec3 test = (AttribsIn.normale);
    if ( afficheNormales ) FragColor = vec4( test,1.0);
 }
