@@ -69,34 +69,37 @@ float calculerSpot( in vec3 spotDir, in vec3 L )
 }
 
 vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O ) {
-   float reflectivity = 0.0;
    vec4 couleur = (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + // calcul composante ambiante (toute reflexion)
    LightSource[0].ambient * FrontMaterial.ambient;
-   float NdotL = dot( N, L ); // calcul de Normale.DirectionLumière pour reflexion diffuse
+   float NdotL = dot(N, L); // calcul de Normale.DirectionLumière pour reflexion diffuse
+   
    if ( NdotL > 0.0 ) { // on calcul l'éclairage seulement si le scalaire est positif
-      // calcul la composante diffuse ( toute reflexion)
-      couleur += FrontMaterial.diffuse * LightSource[0].diffuse * NdotL;
+      couleur += FrontMaterial.diffuse * LightSource[0].diffuse * NdotL; // calcul la composante diffuse ( toute reflexion)
+      float facteurReflexion = 0.0;
       if (utiliseBlinn) {  
-         vec3 B = normalize(L+O); // calcul bissectrice entre la directionLumière et l'observateur (aussi appele half vector ou HF)
-         float LdotB = max( dot( L, B ), 0.0 ); 
-         couleur += FrontMaterial.specular * LightSource[0].specular * pow( LdotB, FrontMaterial.shininess ); // calcul composante speculaire    
+         vec3 B = normalize(L + O); // calcul bissectrice entre la directionLumière et l'observateur (aussi appele half vector ou HF)
+         facteurReflexion = max( dot(L, N), 0.0 ); 
+         
       } else { // Phong
          vec3 R = reflect(-L, N); // réflexion de L par rapport à N
-         float RdotO = max( dot( R, O ), 0.0 );
-         couleur += FrontMaterial.specular * LightSource[0].specular * pow( RdotO, FrontMaterial.shininess ); // calcul composante speculaire    
+         facteurReflexion = max( dot(R, O), 0.0 );
       }
+      couleur += FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire  
+
    }
    return clamp( couleur, 0.0, 1.0 );
 }
 
 void main( void )
 {
-
    vec3 L = normalize(AttribsIn.lumDir);
-   vec3 N = AttribsIn.normale;
-   vec3 O = normalize( AttribsIn.obsVec );
-   vec4 coul = calculerReflexion( L, N, O );
-   FragColor = coul;
-
+   vec3 N = AttribsIn.normale; // ici normale différente selon Lambert ou Phong
+   vec3 O = AttribsIn.obsVec;
+   if ( typeIllumination == ILLUMINATION_GOURAUD) { // si Gouraud on utilise la couleur interpolée
+      FragColor = AttribsIn.couleur;
+   } else { // si Lambert ou Phong on calcule la reflexion à partir de de L,N,O
+      vec4 coul = calculerReflexion( L, N, O );
+      FragColor = coul;
+   }
    if ( afficheNormales ) FragColor = vec4(N ,1.0);
 }

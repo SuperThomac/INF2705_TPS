@@ -38,30 +38,24 @@ out Attribs {
 
 void main()
 {
+   vec3 N = vec3(0);
    if( typeIllumination == ILLUMINATION_LAMBERT  ) { // calcul de la normale à la surface pour Lambert
-      vec3 N = vec3(0);
       vec3 P0 = gl_in[0].gl_Position.xyz; 
       vec3 P1 = gl_in[1].gl_Position.xyz;
       vec3 P2 = gl_in[2].gl_Position.xyz;
       // calcul des vecteurs directeurs du plan triangle
       vec3 V0 = P1 - P0; 
       vec3 V1 = P2 - P0;
-      N = normalize(cross(V0, V1));
-      for (int i = 0; i < gl_in.length(); ++i) {
-         AttribsOut.normale = N;
-         gl_Position = gl_in[i].gl_Position;
-         AttribsOut.couleur = AttribsIn[i].couleur;
-         AttribsOut.lumDir = AttribsIn[i].lumDir;
-         AttribsOut.obsVec = AttribsIn[i].obsVec;
-         EmitVertex();
-      }
-  }
+      AttribsOut.normale = normalize(cross(V0, V1));
+   }
    for (int i = 0; i < gl_in.length(); ++i) {
-      AttribsOut.normale = AttribsIn[i].normale;
-      gl_Position = gl_in[i].gl_Position;
-      AttribsOut.couleur = AttribsIn[i].couleur;
-      AttribsOut.lumDir = AttribsIn[i].lumDir;
+      if( typeIllumination != ILLUMINATION_LAMBERT) {
+         AttribsOut.normale = normalize(AttribsIn[i].normale); // si Gouraud ou Phong, on interpole les normales
+      }
       AttribsOut.obsVec = AttribsIn[i].obsVec;
+      gl_Position = gl_in[i].gl_Position;
+      AttribsOut.couleur = AttribsIn[i].couleur; // ici couleur différentes selon Gouraud ou Phong
+      AttribsOut.lumDir = AttribsIn[i].lumDir;
       EmitVertex();
    }
 }
