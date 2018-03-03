@@ -27,6 +27,7 @@ in Attribs {
    vec3 normale;
    vec3 lumDir;
    vec3 obsVec;
+   float distLum;
 } AttribsIn[];
 
 out Attribs {
@@ -34,6 +35,7 @@ out Attribs {
    vec3 normale;
    vec3 lumDir;
    vec3 obsVec;
+   float distLum;
 } AttribsOut;
 
 void main()
@@ -56,6 +58,7 @@ void main()
       gl_Position = gl_in[i].gl_Position;
       AttribsOut.couleur = AttribsIn[i].couleur; // ici couleur différentes selon Gouraud ou Phong
       AttribsOut.lumDir = AttribsIn[i].lumDir;
+      AttribsOut.distLum = AttribsIn[i].distLum;
       EmitVertex();
    }
 }

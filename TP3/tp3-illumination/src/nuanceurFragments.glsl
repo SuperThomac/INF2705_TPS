@@ -50,6 +50,9 @@ uniform sampler2D laTexture;
 const int ILLUMINATION_LAMBERT = 0;
 const int ILLUMINATION_GOURAUD = 1;
 const int ILLUMINATION_PHONG = 2;
+const int c1 = 1; // attenuation constante
+const float c2 = 0.00005; // attenuation lineaire
+const float c3 = 0.00005; // attenuation quadratique 
 
 
 /////////////////////////////////////////////////////////////////
@@ -59,6 +62,7 @@ in Attribs {
    vec3 normale;
    vec3 lumDir;
    vec3 obsVec;
+   float distLum;
 } AttribsIn;
 
 out vec4 FragColor;
@@ -68,13 +72,14 @@ float calculerSpot( in vec3 spotDir, in vec3 L )
    return( 0.0 );
 }
 
-vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O ) {
+vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
    vec4 couleur = (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + // calcul composante ambiante (toute reflexion)
    LightSource[0].ambient * FrontMaterial.ambient;
    float NdotL = dot(N, L); // calcul de Normale.DirectionLumière pour reflexion diffuse
-   
    if ( NdotL > 0.0 ) { // on calcul l'éclairage seulement si le scalaire est positif
-      couleur += FrontMaterial.diffuse * LightSource[0].diffuse * NdotL; // calcul la composante diffuse ( toute reflexion)
+      float facteurAttenuation = min(1.0, 1/(c1 + c2 * distLum + c3 * pow(distLum,2)));
+      //float facteurAttenuation = 1.0;
+      couleur += facteurAttenuation * FrontMaterial.diffuse * LightSource[0].diffuse * NdotL; // calcul la composante diffuse ( toute reflexion)
       float facteurReflexion = 0.0;
       if (utiliseBlinn) {  
          vec3 B = normalize(L + O); // calcul bissectrice entre la directionLumière et l'observateur (aussi appele half vector ou HF)
@@ -84,7 +89,7 @@ vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O ) {
          vec3 R = reflect(-L, N); // réflexion de L par rapport à N
          facteurReflexion = max( dot(R, O), 0.0 );
       }
-      couleur += FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire  
+      couleur += facteurAttenuation * FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire  
 
    }
    return clamp( couleur, 0.0, 1.0 );
@@ -98,7 +103,7 @@ void main( void )
    if ( typeIllumination == ILLUMINATION_GOURAUD) { // si Gouraud on utilise la couleur interpolée
       FragColor = AttribsIn.couleur;
    } else { // si Lambert ou Phong on calcule la reflexion à partir de de L,N,O
-      vec4 coul = calculerReflexion( L, N, O );
+      vec4 coul = calculerReflexion( L, N, O, AttribsIn.distLum );
       FragColor = coul;
    }
    if ( afficheNormales ) FragColor = vec4(N ,1.0);
