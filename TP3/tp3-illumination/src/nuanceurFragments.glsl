@@ -47,12 +47,18 @@ layout (std140) uniform varsUnif
 };
 
 uniform sampler2D laTexture;
+const int ILLUMINATION_LAMBERT = 0;
+const int ILLUMINATION_GOURAUD = 1;
+const int ILLUMINATION_PHONG = 2;
+
 
 /////////////////////////////////////////////////////////////////
 
 in Attribs {
    vec4 couleur;
    vec3 normale;
+   vec3 lumDir;
+   vec3 obsVec;
 } AttribsIn;
 
 out vec4 FragColor;
@@ -62,48 +68,35 @@ float calculerSpot( in vec3 spotDir, in vec3 L )
    return( 0.0 );
 }
 
-vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O )
-{
-  float reflectivity = 0;
-
-  if (utiliseBlinn) {
-    // Blinn
-    vec3 B = normalize(L + O);
-    reflectivity = max(dot(B, N), 0.0);
-  } else {
-    // Phong
-    vec3 R = reflect(-L, N); // réflexion de L par rapport à N
-    // produit scalaire pour la réflexion spéculaire (Phong)
-    reflectivity = max(dot(R, O), 0.0);
-  }
-  return (pow(reflectivity, FrontMaterial.shininess));
+vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O ) {
+   float reflectivity = 0.0;
+   vec4 couleur = (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + // calcul composante ambiante (toute reflexion)
+   LightSource[0].ambient * FrontMaterial.ambient;
+   float NdotL = dot( N, L ); // calcul de Normale.DirectionLumière pour reflexion diffuse
+   if ( NdotL > 0.0 ) { // on calcul l'éclairage seulement si le scalaire est positif
+      // calcul la composante diffuse ( toute reflexion)
+      couleur += FrontMaterial.diffuse * LightSource[0].diffuse * NdotL;
+      if (utiliseBlinn) {  
+         vec3 B = normalize(L+O); // calcul bissectrice entre la directionLumière et l'observateur (aussi appele half vector ou HF)
+         float LdotB = max( dot( L, B ), 0.0 ); 
+         couleur += FrontMaterial.specular * LightSource[0].specular * pow( LdotB, FrontMaterial.shininess ); // calcul composante speculaire    
+      } else { // Phong
+         vec3 R = reflect(-L, N); // réflexion de L par rapport à N
+         float RdotO = max( dot( R, O ), 0.0 );
+         couleur += FrontMaterial.specular * LightSource[0].specular * pow( RdotO, FrontMaterial.shininess ); // calcul composante speculaire    
+      }
+   }
+   return clamp( couleur, 0.0, 1.0 );
 }
 
 void main( void )
 {
-   // ...
 
-   // assigner la couleur finale
-   //FragColor = AttribsIn.couleur;
-   FragColor = vec4( 0.5, 0.5, 0.5, 1.0 ); // gris moche!
+   vec3 L = normalize(AttribsIn.lumDir);
+   vec3 N = AttribsIn.normale;
+   vec3 O = normalize( AttribsIn.obsVec );
+   vec4 coul = calculerReflexion( L, N, O );
+   FragColor = coul;
 
-   // vec4 coul = calculerReflexion( L, N, O );
-   // ...
-   vec3 L = normalize(AttribsIn.lumiDir);
-
-   if (typeIllumination != 1) {
-
-	float LdotN = dot(L, AttribsIn.normale); // produit scalaire L.N (source Lumineuse, Normale)
-	
-    // calcul de la composante diffuse
-    vec4 coul = FrontMaterial.diffuse * LightSource[0].diffuse * LdotN;
-    
-    // calcul de la composante spéculaire
-    vec3 O = normalize(AttribsIn.obsVec); // vecteur observateur
-
-    coul += FrontMaterial.specular * LightSource[0].specular *
-            calculerReflexion(L, AttribsIn.normale, O);
-	}
-   vec3 test = (AttribsIn.normale);
-   if ( afficheNormales ) FragColor = vec4( test,1.0);
+   if ( afficheNormales ) FragColor = vec4(N ,1.0);
 }

@@ -50,6 +50,10 @@ uniform mat4 matrModel;
 uniform mat4 matrVisu;
 uniform mat4 matrProj;
 uniform mat3 matrNormale;
+const int ILLUMINATION_LAMBERT = 0;
+const int ILLUMINATION_GOURAUD = 1;
+const int ILLUMINATION_PHONG = 2;
+
 
 /////////////////////////////////////////////////////////////////
 
@@ -79,13 +83,9 @@ void main( void )
    // couleur du sommet
    //AttribsOut.couleur = calculerReflexion( L, N, O );
    AttribsOut.couleur = Color; // à modifier!
-   vec3 N = normalize(matrNormale * Normal);
-   AttribsOut.normale = clamp(N, 0.0, 1.0);
-
+   AttribsOut.normale = normalize(matrNormale * Normal); // calcul normale normalisée
    vec3 pos = vec3(matrVisu * matrModel * Vertex);
    AttribsOut.lumDir = vec3((matrVisu * LightSource[0].position).xyz - pos);
-   AttribsOut.obsVec = normalize(-pos);
+   AttribsOut.obsVec = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0)); 
 
-   //AttribsOut.lumiDir = (matrVisu * LightSource[0].position).xyz - pos; // vecteur direction L
-   //AttribsOut.obsVec = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0)); // vecteur direction O 
 }
