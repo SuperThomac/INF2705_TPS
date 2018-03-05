@@ -53,10 +53,9 @@ uniform mat3 matrNormale;
 const int ILLUMINATION_LAMBERT = 0;
 const int ILLUMINATION_GOURAUD = 1;
 const int ILLUMINATION_PHONG = 2;
-const float c1 = 1; // attenuation constante
-const float c2 = 0.00005; // attenuation lineaire
-const float c3 = 0.00005; // attenuation quadratique 
-
+float c1 = LightSource[0].constantAttenuation;
+float c2 = LightSource[0].linearAttenuation;
+float c3 = LightSource[0].quadraticAttenuation;
 
 
 /////////////////////////////////////////////////////////////////
@@ -75,12 +74,10 @@ out Attribs {
 } AttribsOut;
 
 vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
-   vec4 couleur = (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + // calcul composante ambiante (toute reflexion)
-   LightSource[0].ambient * FrontMaterial.ambient;
    float NdotL = dot(N, L); // calcul de Normale.DirectionLumière pour reflexion diffuse
+   vec4 couleur = vec4(0);
    if ( NdotL > 0.0 ) { // on calcul l'éclairage seulement si le scalaire est positif
       float facteurAttenuation = min(1.0, 1/(c1 + c2 * distLum + c3 * pow(distLum,2)));
-      //float facteurAttenuation = 1.0;
       couleur += facteurAttenuation * FrontMaterial.diffuse * LightSource[0].diffuse * NdotL; // calcul la composante diffuse ( toute reflexion)
       float facteurReflexion = 0.0;
       if (utiliseBlinn) {  
@@ -103,15 +100,14 @@ void main( void )
    vec3 posVertex = vec3(matrModel * Vertex); // calculé dans le repère du monde
    float distLum = length(posVertex - posLumiere);
    vec3 pos = vec3(matrVisu * matrModel * Vertex); // calculé dans le repère caméra
-
-   if(typeIllumination == ILLUMINATION_GOURAUD) {
-      vec3 N = normalize(matrNormale * Normal); // calcul normale normalisée
-      vec3 L = normalize(vec3((matrVisu * LightSource[0].position).xyz - pos));
-      vec3 O = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0));
-      AttribsOut.couleur = calculerReflexion(L, N, O, distLum); // calcul des couleurs pour l'interpolation
+   vec3 N = normalize(matrNormale * Normal); // calcul normale normalisée
+   vec3 L = normalize(vec3((matrVisu * LightSource[0].position).xyz - pos));
+   vec3 O = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0));
+   if(typeIllumination == ILLUMINATION_GOURAUD) { // si Gouraud, on calcul la couleur pour chaque sommet
+      AttribsOut.couleur = calculerReflexion(L, N, O, distLum); 
    }
    AttribsOut.distLum = distLum;
-   AttribsOut.normale = (matrNormale * Normal); // calcul normale 
-   AttribsOut.lumDir = vec3((matrVisu * LightSource[0].position).xyz - pos);
-   AttribsOut.obsVec = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0)); 
+   AttribsOut.normale = N;
+   AttribsOut.lumDir = L;
+   AttribsOut.obsVec = O; 
 }

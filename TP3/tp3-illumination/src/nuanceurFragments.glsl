@@ -46,13 +46,14 @@ layout (std140) uniform varsUnif
    int afficheTexelFonce;    // un texel noir doit-il être affiché 0:noir, 1:mi-coloré, 2:transparent?
 };
 
+uniform mat4 matrVisu;
 uniform sampler2D laTexture;
 const int ILLUMINATION_LAMBERT = 0;
 const int ILLUMINATION_GOURAUD = 1;
 const int ILLUMINATION_PHONG = 2;
-const int c1 = 1; // attenuation constante
-const float c2 = 0.00005; // attenuation lineaire
-const float c3 = 0.00005; // attenuation quadratique 
+float c1 = LightSource[0].constantAttenuation;
+float c2 = LightSource[0].linearAttenuation;
+float c3 = LightSource[0].quadraticAttenuation;
 
 
 /////////////////////////////////////////////////////////////////
@@ -69,16 +70,27 @@ out vec4 FragColor;
 
 float calculerSpot( in vec3 spotDir, in vec3 L )
 {
-   return( 0.0 );
+   spotDir = normalize(spotDir);
+	float cosGamma = dot(spotDir, L);
+   float innerCos = cos(radians(LightSource[0].spotAngleOuverture));
+
+	if(utiliseDirect) {
+		// Spot Direct3D
+		float outerCos = pow(innerCos, 1.01 + LightSource[0].spotExponent / 2);
+		return smoothstep(outerCos, innerCos, cosGamma);
+	} else {
+		// Spot OpenGL
+		if(cosGamma >= innerCos) {
+			return pow(cosGamma, LightSource[0].spotExponent);
+		}
+}
 }
 
 vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
-   vec4 couleur = (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + // calcul composante ambiante (toute reflexion)
-   LightSource[0].ambient * FrontMaterial.ambient;
+   vec4 couleur = vec4(0);
    float NdotL = dot(N, L); // calcul de Normale.DirectionLumière pour reflexion diffuse
    if ( NdotL > 0.0 ) { // on calcul l'éclairage seulement si le scalaire est positif
       float facteurAttenuation = min(1.0, 1/(c1 + c2 * distLum + c3 * pow(distLum,2)));
-      //float facteurAttenuation = 1.0;
       couleur += facteurAttenuation * FrontMaterial.diffuse * LightSource[0].diffuse * NdotL; // calcul la composante diffuse ( toute reflexion)
       float facteurReflexion = 0.0;
       if (utiliseBlinn) {  
@@ -90,21 +102,23 @@ vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
          facteurReflexion = max( dot(R, O), 0.0 );
       }
       couleur += facteurAttenuation * FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire  
-
    }
+   couleur += (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + LightSource[0].ambient * FrontMaterial.ambient; // calcul composante ambiante (toute reflexion)
+
    return clamp( couleur, 0.0, 1.0 );
 }
 
 void main( void )
 {
    vec3 L = normalize(AttribsIn.lumDir);
-   vec3 N = AttribsIn.normale; // ici normale différente selon Lambert ou Phong
-   vec3 O = AttribsIn.obsVec;
+   vec3 N = normalize(AttribsIn.normale); // ici normale différente selon Lambert ou Phong
+   vec3 O = normalize(AttribsIn.obsVec);
+   vec3 spotDir = transpose(inverse(mat3(matrVisu))) * (-LightSource[0].spotDirection);
    if ( typeIllumination == ILLUMINATION_GOURAUD) { // si Gouraud on utilise la couleur interpolée
-      FragColor = AttribsIn.couleur;
+      FragColor = AttribsIn.couleur * calculerSpot(spotDir, L);
    } else { // si Lambert ou Phong on calcule la reflexion à partir de de L,N,O
       vec4 coul = calculerReflexion( L, N, O, AttribsIn.distLum );
-      FragColor = coul;
+      FragColor = coul * calculerSpot(spotDir, L);
    }
    if ( afficheNormales ) FragColor = vec4(N ,1.0);
 }

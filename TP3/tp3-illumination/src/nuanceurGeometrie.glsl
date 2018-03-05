@@ -52,9 +52,9 @@ void main()
    }
    for (int i = 0; i < gl_in.length(); ++i) {
       if( typeIllumination != ILLUMINATION_LAMBERT) {
-         AttribsOut.normale = normalize(AttribsIn[i].normale); // si Gouraud ou Phong, on interpole les normales
+         AttribsOut.normale = AttribsIn[i].normale; // si Gouraud ou Phong, on interpole les normales
       }
-      AttribsOut.obsVec = AttribsIn[i].obsVec;
+      AttribsOut.obsVec = normalize(AttribsIn[i].obsVec);
       gl_Position = gl_in[i].gl_Position;
       AttribsOut.couleur = AttribsIn[i].couleur; // ici couleur différentes selon Gouraud ou Phong
       AttribsOut.lumDir = AttribsIn[i].lumDir;
