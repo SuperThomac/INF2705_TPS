@@ -28,6 +28,7 @@ in Attribs {
    vec3 lumDir;
    vec3 obsVec;
    float distLum;
+   vec2 textureCoord;
 } AttribsIn[];
 
 out Attribs {
@@ -36,20 +37,25 @@ out Attribs {
    vec3 lumDir;
    vec3 obsVec;
    float distLum;
+   vec2 textureCoord;
 } AttribsOut;
 
 void main()
 {
    vec3 N = vec3(0);
-   if( typeIllumination == ILLUMINATION_LAMBERT  ) { // calcul de la normale à la surface pour Lambert
+   if( typeIllumination == ILLUMINATION_LAMBERT  ) { 
+	  // calcul de la normale à la surface pour Lambert
       vec3 P0 = gl_in[0].gl_Position.xyz; 
       vec3 P1 = gl_in[1].gl_Position.xyz;
       vec3 P2 = gl_in[2].gl_Position.xyz;
+      
       // calcul des vecteurs directeurs du plan triangle
       vec3 V0 = P1 - P0; 
       vec3 V1 = P2 - P0;
+      
       AttribsOut.normale = normalize(cross(V0, V1));
    }
+   
    for (int i = 0; i < gl_in.length(); ++i) {
       if( typeIllumination != ILLUMINATION_LAMBERT) {
          AttribsOut.normale = AttribsIn[i].normale; // si Gouraud ou Phong, on interpole les normales
@@ -59,6 +65,7 @@ void main()
       AttribsOut.couleur = AttribsIn[i].couleur; // ici couleur différentes selon Gouraud ou Phong
       AttribsOut.lumDir = AttribsIn[i].lumDir;
       AttribsOut.distLum = AttribsIn[i].distLum;
+      AttribsOut.textureCoord = AttribsIn[i].textureCoord;
       EmitVertex();
    }
 }

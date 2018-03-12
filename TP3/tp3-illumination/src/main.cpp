@@ -375,8 +375,8 @@ void FenetreTP::initialiser()
       -1.0, -1.0,  1.0,   -1.0,  1.0,  1.0,  -1.0, -1.0, -1.0,   -1.0,  1.0, -1.0,   // P4,P7,P0,P3
       -1.0, -1.0,  1.0,    1.0, -1.0,  1.0,  -1.0,  1.0,  1.0,    1.0,  1.0,  1.0    // P4,P5,P7,P6
    };
-	GLfloat normales[3*4*6] =
-	{
+   GLfloat normales[3*4*6] =
+   {
        0.0,  0.0, -1.0,    0.0,  0.0, -1.0,   0.0,  0.0, -1.0,    0.0,  0.0, -1.0,   // P3,P2,P0,P1
        0.0, -1.0,  0.0,    0.0, -1.0,  0.0,   0.0, -1.0,  0.0,    0.0, -1.0,  0.0,   // P5,P4,P1,P0
        1.0,  0.0,  0.0,    1.0,  0.0,  0.0,   1.0,  0.0,  0.0,    1.0,  0.0,  0.0,   // P6,P5,P2,P1
@@ -384,6 +384,26 @@ void FenetreTP::initialiser()
       -1.0,  0.0,  0.0,   -1.0,  0.0,  0.0,  -1.0,  0.0,  0.0,   -1.0,  0.0,  0.0,   // P4,P7,P0,P3
        0.0,  0.0,  1.0,    0.0,  0.0,  1.0,   0.0,  0.0,  1.0,    0.0,  0.0,  1.0,    // P4,P5,P7,P6
    };
+   
+   GLfloat deTex[2*4*6] =
+   {
+	   2.0/3.0, 2.0/3.0,    1.0/3.0, 2.0/3.0,   2.0/3.0, 1.0/3.0,   1.0/3.0, 1.0/3.0, // 1 sur le de
+       1.0/3.0, 0.0,        2.0/3.0, 0.0,       1.0/3.0, 1.0/3.0,   2.0/3.0, 1.0/3.0, // 3 sur le de
+       0.0, 2.0/3.0,        0.0, 1.0/3.0,       1.0/3.0, 2.0/3.0,   1.0/3.0, 1.0/3.0, // 2 sur le de
+       2.0/3.0, 1.0,        1.0/3.0, 1.0,       2.0/3.0, 2.0/3.0,   1.0/3.0, 2.0/3.0, // 4 sur le de
+       1.0, 1.0/3.0,        1.0, 2.0/3.0,       2.0/3.0, 1.0/3.0,   2.0/3.0, 2.0/3.0, // 5 sur le de
+       2.0/3.0, 0.0,        1.0, 0.0,           2.0/3.0, 1.0/3.0,   1.0, 1.0/3.0 // 6 sur le de
+   };
+   GLfloat echiqTex[2*4*6] =
+   {
+       3.0, 3.0,    0.0, 3.0,   3.0, 0.0,   0.0, 0.0,
+       3.0, 0.0,    0.0, 0.0,   3.0, 3.0,   0.0, 3.0,
+       3.0, 3.0,    0.0, 3.0,   3.0, 0.0,   0.0, 0.0,
+       3.0, 0.0,    0.0, 0.0,   3.0, 3.0,   0.0, 3.0,
+       3.0, 3.0,    0.0, 3.0,   3.0, 0.0,   0.0, 0.0,
+       3.0, 3.0,    0.0, 3.0,   3.0, 0.0,   0.0, 0.0,
+   };
+
    // allouer les objets OpenGL
    glGenVertexArrays( 2, vao );
    glGenBuffers( 5, vbo );
@@ -395,14 +415,23 @@ void FenetreTP::initialiser()
    glBufferData( GL_ARRAY_BUFFER, sizeof(sommets), sommets, GL_STATIC_DRAW );
    glVertexAttribPointer( locVertex, 3, GL_FLOAT, GL_FALSE, 0, 0 );
    glEnableVertexAttribArray(locVertex);
+   
    // (partie 1) charger le VBO pour les normales
-	glBindBuffer( GL_ARRAY_BUFFER, vbo[1] );
+   glBindBuffer( GL_ARRAY_BUFFER, vbo[1] );
    glBufferData( GL_ARRAY_BUFFER, sizeof(normales), normales, GL_STATIC_DRAW );
    glVertexAttribPointer( locNormal, 3, GL_FLOAT, GL_FALSE, 0, 0 );
    glEnableVertexAttribArray(locNormal);
 
    // (partie 3) charger le VBO pour les coordonnées de texture
-   // ...
+   glBindBuffer( GL_ARRAY_BUFFER, vbo[2] );
+   glBufferData( GL_ARRAY_BUFFER, sizeof(normales), normales, GL_STATIC_DRAW );
+   glVertexAttribPointer( locNormal, 3, GL_FLOAT, GL_FALSE, 0, 0 );
+   glEnableVertexAttribArray(locNormal);
+   
+   glBindBuffer( GL_ARRAY_BUFFER, vbo[3] );
+   glBufferData( GL_ARRAY_BUFFER, sizeof(echiqTex), echiqTex, GL_STATIC_DRAW );
+   glVertexAttribPointer( locTexCoord, 2, GL_FLOAT, GL_FALSE, 0, 0 );
+   glEnableVertexAttribArray(locTexCoord);
 
    glBindVertexArray(0);
 
@@ -447,18 +476,23 @@ void afficherModele()
    {
    default:
       //std::cout << "Sans texture" << std::endl;
+      glBindTexture( GL_TEXTURE_2D, 0 );
       break;
    case 1:
       //std::cout << "Texture 1 DE" << std::endl;
+      glBindTexture( GL_TEXTURE_2D, textures[0] );
       break;
    case 2:
       //std::cout << "Texture 2 ECHIQUIER" << std::endl;
+      glBindTexture( GL_TEXTURE_2D, textures[1] );
       break;
    case 3:
       //std::cout << "Texture 3 METAL" << std::endl;
+      glBindTexture( GL_TEXTURE_2D, textures[2] );
       break;
    case 4:
       //std::cout << "Texture 4 MOSAIQUE" << std::endl;
+      glBindTexture( GL_TEXTURE_2D, textures[3] );
       break;
    }
 

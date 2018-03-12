@@ -71,6 +71,7 @@ out Attribs {
    vec3 lumDir;
    vec3 obsVec;
    float distLum;
+   vec2 textureCoord;
 } AttribsOut;
 
 vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
@@ -96,6 +97,7 @@ void main( void )
 {
    // transformation standard du sommet
    gl_Position = matrProj * matrVisu * matrModel * Vertex;
+   
    vec3 posLumiere = vec3(LightSource[0].position);
    vec3 posVertex = vec3(matrModel * Vertex); // calculé dans le repère du monde
    float distLum = length(posVertex - posLumiere);
@@ -103,11 +105,13 @@ void main( void )
    vec3 N = normalize(matrNormale * Normal); // calcul normale normalisée
    vec3 L = normalize(vec3((matrVisu * LightSource[0].position).xyz - pos));
    vec3 O = (LightModel.localViewer ? normalize(-pos) : vec3(0.0, 0.0, 1.0));
-   if(typeIllumination == ILLUMINATION_GOURAUD) { // si Gouraud, on calcul la couleur pour chaque sommet
+   if(typeIllumination == ILLUMINATION_GOURAUD) { 
+	  // si Gouraud, on calcul la couleur pour chaque sommet
       AttribsOut.couleur = calculerReflexion(L, N, O, distLum); 
    }
    AttribsOut.distLum = distLum;
    AttribsOut.normale = N;
    AttribsOut.lumDir = L;
    AttribsOut.obsVec = O; 
+   AttribsOut.textureCoord = TexCoord.st;
 }
