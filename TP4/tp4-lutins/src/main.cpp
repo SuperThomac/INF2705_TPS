@@ -136,6 +136,17 @@ void calculerPhysique( )
       // À MODIFIER (partie 1)
       // déplacer les particules en utilisant le nuanceur de rétroaction
       // ... (MODIFIER)
+      // on informe la CG des modifications des variables uniformes utilisées dans le nuanceur de retroaction
+      glUseProgram(progRetroaction);
+      glUniform3fv(locbDimRetroaction, 1, glm::value_ptr(bDim));
+      glUniform3fv(locpositionPuitsRetroaction, 1, glm::value_ptr(positionPuits));
+      glUniform1f(loctempsRetroaction, temps);
+      glUniform1f(locdtRetroaction, etat.mouvement ? dt : 0.0);
+      glUniform1f(loctempsMaxRetroaction, tempsMax);
+      glUniform1f(locgraviteRetroaction, gravite);
+      
+      glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER, 0, vbo[1] );
+
 
       // débuter la requête (si impression)
       if ( etat.impression )
@@ -143,6 +154,9 @@ void calculerPhysique( )
 
       // « dessiner »
       // ... (MODIFIER)
+         glEnable( GL_RASTERIZER_DISCARD ); // desactive le tramage
+         
+         glDisable( GL_RASTERIZER_DISCARD ); // reactive le tramage
 
       // terminer la requête (si impression)
       if ( etat.impression )
@@ -368,8 +382,8 @@ void chargerNuanceurs()
       }
 
       // À MODIFIER (partie 1)
-      //const GLchar* vars[] = { ... };
-      //glTransformFeedbackVaryings( progRetroaction, sizeof(vars)/sizeof(vars[0]), vars, GL_INTERLEAVED_ATTRIBS );
+      const GLchar* vars[] = { "positionMod", "vitesseMod", "couleurMod", "tempsRestantMod" };
+      glTransformFeedbackVaryings( progRetroaction, sizeof(vars)/sizeof(vars[0]), vars, GL_INTERLEAVED_ATTRIBS );
 
       // faire l'édition des liens du programme
       glLinkProgram( progRetroaction );

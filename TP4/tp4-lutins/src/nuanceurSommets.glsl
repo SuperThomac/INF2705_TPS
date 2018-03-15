@@ -12,7 +12,7 @@ in vec3 vitesse;
 out Attribs {
    vec4 couleur;
    float tempsRestant;
-   //float sens; // du vol
+   float sens; // du vol
 } AttribsOut;
 
 void main( void )
@@ -24,6 +24,8 @@ void main( void )
 
    // couleur du sommet
    AttribsOut.couleur = Color;
+   AttribsOut.sens = sign((matrVisu * matrModel * vec4(vitesse,1)).x);
+
 
    // À SUPPRIMER: les lignes suivantes servent seulement à forcer le compilateur à conserver cet attribut
    if ( tempsRestant < 0.0 ) AttribsOut.couleur.rgb += 0.00001*vitesse;

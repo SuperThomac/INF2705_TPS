@@ -29,9 +29,7 @@ float myrandom( uint seed ) // entre  0 et 1
 
 void main( void )
 {
-   // Mettre un test bidon afin que l'optimisation du compilateur n'élimine pas les attributs dt, gravite, tempsMax positionPuits et bDim.
-   // Vous ENLEVEREZ cet énoncé inutile!
-   if ( dt+gravite+tempsMax+positionPuits.x < -100000 ) tempsRestantMod += .000001;
+   if ( dt+gravite+tempsMax+positionPuits.x < -100000 ) tempsRestantMod += .000001; // test bidon à garder
 
    if ( tempsRestant <= 0.0 )
    {
