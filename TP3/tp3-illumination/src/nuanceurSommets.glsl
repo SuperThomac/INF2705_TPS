@@ -88,7 +88,8 @@ vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
          vec3 R = reflect(-L, N); // réflexion de L par rapport à N
          facteurReflexion = max( dot(R, O), 0.0 );
       }
-      couleur += facteurAttenuation * FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire  
+      couleur += facteurAttenuation * FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire
+      couleur += (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + LightSource[0].ambient * FrontMaterial.ambient; // calcul composante ambiante 
    }
    return clamp( couleur, 0.0, 1.0 );
 }

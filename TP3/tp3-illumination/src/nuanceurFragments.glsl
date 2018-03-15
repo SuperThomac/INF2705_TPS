@@ -89,7 +89,7 @@ float calculerSpot( in vec3 spotDir, in vec3 L )
 }
 }
 
-vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) { 
+vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
    vec4 couleur = vec4(0);
    float NdotL = dot(N, L); // calcul de Normale.DirectionLumière pour reflexion diffuse
    if ( NdotL > 0.0 ) { // on calcul l'éclairage seulement si le scalaire est positif
@@ -104,9 +104,9 @@ vec4 calculerReflexion( in vec3 L, in vec3 N, in vec3 O, in float distLum ) {
          vec3 R = reflect(-L, N); // réflexion de L par rapport à N
          facteurReflexion = max( dot(R, O), 0.0 );
       }
-      couleur += facteurAttenuation * FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire  
+      couleur += facteurAttenuation * FrontMaterial.specular * LightSource[0].specular * pow( facteurReflexion, FrontMaterial.shininess ); // calcul composante speculaire
+      couleur += (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + LightSource[0].ambient * FrontMaterial.ambient; // calcul composante ambiante 
    }
-   couleur += (FrontMaterial.emission + FrontMaterial.ambient * LightModel.ambient) + LightSource[0].ambient * FrontMaterial.ambient; // calcul composante ambiante (toute reflexion)
 
    return clamp( couleur, 0.0, 1.0 );
 }
@@ -118,6 +118,7 @@ void main( void )
    vec3 O = normalize(AttribsIn.obsVec);
    vec3 spotDir = transpose(inverse(mat3(matrVisu))) * (-LightSource[0].spotDirection);
    
+   vec4 tex = texture(laTexture, AttribsIn.texCoord);
    if (texnumero != 0) { // si on utilise une texture
       FragColor = texture(laTexture, AttribsIn.textureCoord).rgba;
       if (afficheTexelFonce == TEXEL_OPAQUE) {
@@ -132,22 +133,11 @@ void main( void )
   
   if ( typeIllumination == ILLUMINATION_GOURAUD) { 
 	  // si Gouraud on utilise la couleur interpolée
-       else {
-         FragColor *= FragColor * AttribsIn.couleur * calculerSpot(spotDir, L);
-         FragColor += (FrontMaterial.emission +
-                    FrontMaterial.ambient * LightModel.ambient) +
-                    LightSource[0].ambient * FrontMaterial.ambient;
-    }
-      //FragColor = AttribsIn.couleur * calculerSpot(spotDir, L);
+         FragColor *=  AttribsIn.couleur * calculerSpot(spotDir, L);
    } else { 
 	  // si Lambert ou Phong on calcule la reflexion à partir de de L,N,O
       vec4 coul = calculerReflexion( L, N, O, AttribsIn.distLum );
-        FragColor *= coul * calculerSpot(spotDir, L);
-        //FragColor *= coul * calculerSpot(LightSource[0].spotDirection, L);
-        FragColor += (FrontMaterial.emission +
-                    FrontMaterial.ambient * LightModel.ambient) +
-                   LightSource[0].ambient * FrontMaterial.ambient;
+      FragColor *= coul * calculerSpot(spotDir, L); 
     }
-   }
    if ( afficheNormales ) FragColor = vec4(N ,1.0);
 }
