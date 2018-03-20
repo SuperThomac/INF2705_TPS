@@ -39,7 +39,7 @@ GLint locmatrModelBase = -1;
 GLint locmatrVisuBase = -1;
 GLint locmatrProjBase = -1;
 
-GLuint vao[2];
+GLuint vao[2]; 
 GLuint vbo[2];
 GLuint tfo[1];
 GLuint requete;
@@ -138,16 +138,32 @@ void calculerPhysique( )
       // ... (MODIFIER)
       // on informe la CG des modifications des variables uniformes utilisées dans le nuanceur de retroaction
       glUseProgram(progRetroaction);
-      glUniform3fv(locbDimRetroaction, 1, glm::value_ptr(bDim));
-      glUniform3fv(locpositionPuitsRetroaction, 1, glm::value_ptr(positionPuits));
-      glUniform1f(loctempsRetroaction, temps);
-      glUniform1f(locdtRetroaction, etat.mouvement ? dt : 0.0);
-      glUniform1f(loctempsMaxRetroaction, tempsMax);
-      glUniform1f(locgraviteRetroaction, gravite);
+      glUniform3fv(locbDimRetroaction, 1, glm::value_ptr(etat.bDim));
+      glUniform3fv(locpositionPuitsRetroaction, 1, glm::value_ptr(etat.positionPuits));
+      glUniform1f(loctempsRetroaction, parametres.temps);
+      glUniform1f(locdtRetroaction, parametres.dt);
+      glUniform1f(loctempsMaxRetroaction, parametres.tempsMax);
+      glUniform1f(locgraviteRetroaction, parametres.gravite);
       
+      // on stocke dans vbo[1]
       glBindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER, 0, vbo[1] );
+      
+      // on selectionne le deuxieme vao
+      glBindVertexArray( vao[1] );
+      glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
+      
+	   glVertexAttribPointer( locpositionRetroaction, 3, GL_FLOAT, GL_FALSE, sizeof(Part), reinterpret_cast<void*>( offsetof(Part,position) ) );
+      glEnableVertexAttribArray(locpositionRetroaction);
+      
+      glVertexAttribPointer( loccouleurRetroaction, 4, GL_FLOAT, GL_FALSE, sizeof(Part), reinterpret_cast<void*>( offsetof(Part,couleur) ) );
+	   glEnableVertexAttribArray(loccouleurRetroaction);
 
-
+	   glVertexAttribPointer( locvitesseRetroaction, 3, GL_FLOAT, GL_FALSE, sizeof(Part), reinterpret_cast<void*>( offsetof(Part,vitesse) ) );
+	   glEnableVertexAttribArray(locvitesseRetroaction);
+      
+	   glVertexAttribPointer( loctempsRestantRetroaction, 1, GL_FLOAT, GL_FALSE, sizeof(Part), reinterpret_cast<void*>( offsetof(Part,tempsRestant) ) );
+	   glEnableVertexAttribArray(loctempsRestantRetroaction);
+      
       // débuter la requête (si impression)
       if ( etat.impression )
          glBeginQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, requete );
@@ -155,7 +171,9 @@ void calculerPhysique( )
       // « dessiner »
       // ... (MODIFIER)
          glEnable( GL_RASTERIZER_DISCARD ); // desactive le tramage
-         
+         glBeginTransformFeedback( GL_TRIANGLES );
+         glDrawArrays( GL_TRIANGLES, 0, sizeof(part)/sizeof(Part) );
+         glEndTransformFeedback();
          glDisable( GL_RASTERIZER_DISCARD ); // reactive le tramage
 
       // terminer la requête (si impression)
@@ -382,7 +400,7 @@ void chargerNuanceurs()
       }
 
       // À MODIFIER (partie 1)
-      const GLchar* vars[] = { "positionMod", "vitesseMod", "couleurMod", "tempsRestantMod" };
+      const GLchar* vars[] = { "positionMod", "vitesseMod", "couleurMod", "tempsRestantMod" }; // on transmet les 4 attributs de la struct part
       glTransformFeedbackVaryings( progRetroaction, sizeof(vars)/sizeof(vars[0]), vars, GL_INTERLEAVED_ATTRIBS );
 
       // faire l'édition des liens du programme
