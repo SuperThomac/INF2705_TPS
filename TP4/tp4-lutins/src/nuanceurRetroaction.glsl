@@ -67,8 +67,7 @@ void main( void )
       // garder la couleur courante
       couleurMod = couleur;
 
-      // collision avec la demi-sphère ?
-      // ...
+      // collision avec la demi-sphère
       vec3 posSphUnitaire = positionMod / bDim;
       vec3 vitSphUnitaire = vitesseMod * bDim;
       
@@ -82,23 +81,20 @@ void main( void )
 		  vitesseMod = vitReflechieSphUnitaire / bDim;
 	  }
 
-      // collision avec le sol ?
-      // ...
+      // collision avec le sol
       float plancherDist = positionMod.z;
       
-	  if (plancherDist <= 0.05)
-	  {
-		  if (vitesse.z < 0)
-		  {
-			positionMod.z = 0.05;
-			vec3 nSol = vec3 (0.0, 0.0, 1.0 );
-			vec3 vitReflechiePlancher = reflect(vitSphUnitaire, nSol);
-			vitesseMod = vitReflechiePlancher / bDim;
-		  }
-	   }
-
+      if (plancherDist <= 0.05)
+      {
+         if (vitesse.z < 0)
+         {
+            positionMod.z = 0.05;
+            vec3 nSol = vec3 (0.0, 0.0, 1.0 );
+            vec3 vitReflechiePlancher = reflect(vitSphUnitaire, nSol);
+            vitesseMod = vitReflechiePlancher / bDim;
+         }
+      }
       // appliquer la gravité
-      // ...
       vitesseMod.z -= gravite * dt;
-  }
+   }
 }
