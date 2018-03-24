@@ -6,7 +6,7 @@ layout(points, max_vertices = 1) out;
 in Attribs {
    vec4 couleur;
    float tempsRestant;
-   //float sens; // du vol
+   float sens; // du vol
 } AttribsIn[];
 
 out Attribs {

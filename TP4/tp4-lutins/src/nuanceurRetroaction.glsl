@@ -36,7 +36,7 @@ void main( void )
       // se préparer à produire une valeur un peu aléatoire
       uint seed = uint(temps * 1000.0) + uint(gl_VertexID);
       // faire renaitre la particule au puits
-      //positionMod = ...
+      positionMod = positionPuits;
 
       // assigner un vitesse
       vitesseMod = vec3( mix( -0.5, 0.5, myrandom(seed++) ),   // entre -0.5 et 0.5
@@ -45,32 +45,60 @@ void main( void )
       //vitesseMod = vec3( -0.8, 0., 0.6 );
 
       // nouveau temps de vie
-      //tempsRestantMod = ...; // entre 0 et tempsMax secondes
+      tempsRestantMod = myrandom(seed++)*tempsMax; // entre 0 et tempsMax secondes
 
       // interpolation linéaire entre COULMIN et COULMAX
       const float COULMIN = 0.2; // valeur minimale d'une composante de couleur lorsque la particule (re)naît
       const float COULMAX = 0.9; // valeur maximale d'une composante de couleur lorsque la particule (re)naît
-      //couleurMod = ...
+      couleurMod = vec4( mix( COULMIN, COULMAX, myrandom(seed++) ),   
+                         mix( COULMIN, COULMAX, myrandom(seed++) ),      
+                         mix( COULMIN, COULMAX, myrandom(seed++) ),   
+                         1);
    }
    else
    {
       // avancer la particule
-      positionMod = position; // ...
+      positionMod = position + vitesse * dt; // ...
       vitesseMod = vitesse;
 
       // diminuer son temps de vie
-      tempsRestantMod = tempsRestant;
+      tempsRestantMod = tempsRestant - dt;
 
       // garder la couleur courante
       couleurMod = couleur;
 
       // collision avec la demi-sphère ?
       // ...
+      vec3 posSphUnitaire = positionMod / bDim;
+      vec3 vitSphUnitaire = vitesseMod * bDim;
+      
+      float dist = length( posSphUnitaire );
+      
+      if ( dist >= 1.0)
+      {
+		  positionMod = ( 2.0 - dist ) * positionMod;
+		  vec3 N = posSphUnitaire / dist; 
+		  vec3 vitReflechieSphUnitaire = reflect( vitSphUnitaire, N);
+		  vitesseMod = vitReflechieSphUnitaire / bDim;
+	  }
 
       // collision avec le sol ?
       // ...
+      float plancherDist = positionMod.z;
+      
+	  if (plancherDist <= 0.05)
+	  {
+		  if (vitesse.z < 0)
+		  {
+			positionMod.z = 0.05;
+			vec3 nSol = vec3 (0.0, 0.0, 1.0 );
+			vec3 vitReflechiePlancher = reflect(vitSphUnitaire, nSol);
+			vitesseMod = vitReflechiePlancher / bDim;
+		  }
+	   }
 
       // appliquer la gravité
       // ...
-   }
+      vitesseMod.z -= gravite * dt;
+  }
 }
