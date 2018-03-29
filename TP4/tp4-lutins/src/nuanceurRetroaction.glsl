@@ -58,7 +58,7 @@ void main( void )
    else
    {
       // avancer la particule
-      positionMod = position + vitesse * dt; // ...
+      positionMod = position + vitesse * dt;
       vitesseMod = vitesse;
 
       // diminuer son temps de vie
@@ -70,7 +70,6 @@ void main( void )
       // collision avec la demi-sphère
       vec3 posSphUnitaire = positionMod / bDim;
       vec3 vitSphUnitaire = vitesseMod * bDim;
-      
       float dist = length( posSphUnitaire );
       
       if ( dist >= 1.0)
@@ -79,6 +78,7 @@ void main( void )
 		  vec3 N = posSphUnitaire / dist; 
 		  vec3 vitReflechieSphUnitaire = reflect( vitSphUnitaire, N);
 		  vitesseMod = vitReflechieSphUnitaire / bDim;
+		  couleurMod.a = couleur.a * 0.5;
 	  }
 
       // collision avec le sol
@@ -92,6 +92,7 @@ void main( void )
             vec3 nSol = vec3 (0.0, 0.0, 1.0 );
             vec3 vitReflechiePlancher = reflect(vitSphUnitaire, nSol);
             vitesseMod = vitReflechiePlancher / bDim;
+		  couleurMod.a = couleur.a * 0.5;
          }
       }
       // appliquer la gravité
