@@ -3,6 +3,10 @@
 uniform sampler2D laTexture;
 uniform int texnumero;
 
+const int texEtincelle = 1;
+const int texOiseau = 2;
+const int texLeprechaun = 3;
+
 in Attribs {
    vec4 couleur;
    vec2 texCoord;
@@ -13,20 +17,13 @@ out vec4 FragColor;
 void main( void )
 {
 
-   // Mettre un test bidon afin que l'optimisation du compilateur n'élimine l'attribut "couleur".
-   // Vous MODIFIEREZ ce test inutile!
-   if ( AttribsIn.couleur.r < 0.0 ) discard;
-
-   //FragColor = texture( laTexture, gl_PointCoord );
     AttribsIn.couleur;
-   if ( texnumero > 0 )
-   {
+   if ( texnumero > 0 ){ // pas de texture
       vec4 texel = texture(laTexture, AttribsIn.texCoord).rgba;
-      if (texel.a < 0.1) discard;
+      if (texel.a < 0.1) discard; // pour enlever la partie de la texture non désiré
       FragColor = mix(AttribsIn.couleur, texel, 0.7);
    }
-   else
-   {
+   else{
 	      FragColor = AttribsIn.couleur;
 	}
 }

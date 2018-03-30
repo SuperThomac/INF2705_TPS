@@ -79,11 +79,10 @@ void main( void )
 		  vec3 vitReflechieSphUnitaire = reflect( vitSphUnitaire, N);
 		  vitesseMod = vitReflechieSphUnitaire / bDim;
 		  couleurMod.a = couleur.a * 0.5;
-	  }
+      }
 
       // collision avec le sol
       float plancherDist = positionMod.z;
-      
       if (plancherDist <= 0.05)
       {
          if (vitesse.z < 0)

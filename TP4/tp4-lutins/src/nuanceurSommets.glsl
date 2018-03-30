@@ -20,10 +20,8 @@ out Attribs {
 void main( void )
 {
    gl_Position = matrVisu * matrModel * Vertex;
-
    AttribsOut.tempsRestant = tempsRestant;
-
    // couleur du sommet
    AttribsOut.couleur = Color;
-   AttribsOut.sens = sign((matrVisu * matrModel * vec4(vitesse,1)).x);
+   AttribsOut.sens = sign((matrVisu * matrModel * vec4(vitesse,1)).x); // sign pour le sens des oiseaux
 }

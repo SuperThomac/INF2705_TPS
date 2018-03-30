@@ -169,7 +169,6 @@ void calculerPhysique( )
          glBeginQuery( GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, requete );
 
       // « dessiner »
-      // ... (MODIFIER)
          glEnable( GL_RASTERIZER_DISCARD ); // desactive le tramage
          glBeginTransformFeedback( GL_TRIANGLES );
          glDrawArrays( GL_TRIANGLES, 0, sizeof(part)/sizeof(Part) );
