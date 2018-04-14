@@ -99,44 +99,55 @@ float FctMath( vec2 uv ) // uv est dans [-bDim.x,bDim.x] X [-bDim.y,bDim.y]
 // déplacement du plan selon la texture
 float FctText( vec2 texCoord )
 {
-   //...
-   return 0.0; // à modifier!
+	vec3 texel = texture(textureDepl, texCoord.st).rgb;
+	return length(texel) * facteurDeform / 10.0;
 }
 
 void main( void )
 {
-   const float eps = 0.01;
+	const float eps = 0.01;
 
-   // interpoler la position selon la tessellation (dans le repère de modélisation)
-   vec4 posModel = interpole( gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position );
+	// interpoler la position selon la tessellation (dans le repère de modélisation)
+	vec4 posModel = interpole( gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position );
 
-   // générer (en utilisant directement posModel.xy) les coordonnées de texture plutôt que les interpoler
-   //AttribsOut.texCoord = ...;
+	// générer (en utilisant directement posModel.xy) les coordonnées de texture plutôt que les interpoler
+	vec2 texCoord = 0.5 * posModel.xy + vec2(0.5, 0.5);
+	AttribsOut.texCoord = texCoord;
 
 #if ( INDICEFONCTION != 0 )
 
-   // Déplacement selon la fonction mathématique (partie 1)
-   // étape 1: mettre xy entre -bDim et +bDim
-   posModel.xy = mix(-bDim.xy, bDim.xy, posModel.xy);
+	// Déplacement selon la fonction mathématique (partie 1)
+	// étape 1: mettre xy entre -bDim et +bDim
+	posModel.xy = mix(-bDim.xy, bDim.xy, posModel.xy);
 
-   // étape 2: évaluer le déplacement
-   posModel.z = FctMath( vec2 (posModel.x, posModel.y) );
+	// étape 2: évaluer le déplacement
+	posModel.z = FctMath( posModel.xy );
 
-   // étape 3: calculer la normale
-   
-   vec3 N = vec3((FctMath(vec2(posModel.x + epsilon, posModel.y)) - FctMath(vec2(posModel.x - epsilon, posModel.y)))/(2*epsilon),
-   (FctMath(vec2(posModel.x, epsilon + posModel.y)) - FctMath(vec2(posModel.x, posModel.y - epsilon )))/(2*epsilon),-1);
+	// étape 3: calculer la normale
+
+	vec3 N = vec3((FctMath(vec2(posModel.x + epsilon, posModel.y)) 
+				- FctMath(vec2(posModel.x - epsilon, posModel.y)))/(2*epsilon),
+				
+				 (FctMath(vec2(posModel.x, epsilon + posModel.y)) 
+				- FctMath(vec2(posModel.x, posModel.y - epsilon )))/(2*epsilon),-1);
+	N = normalize(N);
+	
 
 #else
 
-   // déplacement selon la texture (partie 2)
-   // mettre xy entre -bDim et +bDim
-   // ...
-   // évaluer le déplacement
-   // ....z = FctText( ... );
-   // calculer la normale
-   vec3 N = vec3(0.,0.,1.); // à modifier
-
+	// déplacement selon la texture (partie 2)
+	// mettre xy entre -bDim et +bDim
+	posModel.xy = mix(-bDim.xy, bDim.xy, posModel.xy);
+	// évaluer le déplacement
+	posModel.z = FctText(texCoord);
+	// calculer la normale
+	vec3 N = vec3((FctText(vec2(posModel.x + epsilon, posModel.y)) 
+				- FctText(vec2(posModel.x - epsilon, posModel.y)))/(2*epsilon),
+				
+				 (FctText(vec2(posModel.x, epsilon + posModel.y)) 
+				- FctText(vec2(posModel.x, posModel.y - epsilon )))/(2*epsilon),-1);
+	N = normalize(N);
+	
 #endif
 
 #if ( AFFICHENORMALES == 1 )

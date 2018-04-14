@@ -58,13 +58,21 @@ void main()
       // vecteur de la direction vers la lumière (dans le repère de la caméra)
       for ( int j = 0 ; j < 2 ; ++j )
       {
-          /*AttribsOut.lumiDir[j] = ( LightSource.position[j].w != 0.0 ) ?
-                                  ( LightSource.position).xyz/LightSource.position.w - pos: // lumière positionnelle en (x/w,y/w,z/w)
-                                   (LightSource.position).xyz; // lumière directionnelle dans la direction (x,y,z)*/
+		/*if (LightSource.position[j].w != 0.0) // lumière positionnelle en (x/w,y/w,z/w)
+		{
+			AttribsOut.lumiDir[j] = (LightSource.position[j]).xyz/LightSource.position[j].w - posVisu.xyz;
+		}
+		else // lumière directionnelle dans la direction (x,y,z)
+		{
+			AttribsOut.lumiDir[j] = (LightSource.position[j]).xyz;
+		}*/
+		AttribsOut.lumiDir[j] = ( LightSource.position[j].w != 0.0 ) ?
+								(LightSource.position[j]).xyz/LightSource.position[j].w - posVisu.xyz: // lumière positionnelle en (x/w,y/w,z/w)
+								(LightSource.position[j]).xyz; // lumière directionnelle dans la direction (x,y,z)
       }
 
       // vecteur de la direction vers l'observateur
-       AttribsOut.obsVec = normalize(-pos);
+       AttribsOut.obsVec = normalize(-posVisu.xyz);
 
       EmitVertex();
    }

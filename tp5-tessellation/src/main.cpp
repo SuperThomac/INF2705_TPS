@@ -594,36 +594,49 @@ void FenetreTP::afficherScene()
       glUnmapBuffer( GL_UNIFORM_BUFFER );
    }
 
-   //glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj ); // inutile car on modifie ensuite la projection
-   glUniformMatrix4fv( locmatrVisu, 1, GL_FALSE, matrVisu );
-   glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
-   // (partie 1: ne pas oublier de calculer et donner une matrice pour les transformations des normales)
-   glUniformMatrix3fv( locmatrNormale, 1, GL_TRUE, glm::value_ptr( glm::inverse( glm::mat3( matrVisu.getMatr() * matrModel.getMatr() ) ) ) );
+	//glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj ); // inutile car on modifie ensuite la projection
+	glUniformMatrix4fv( locmatrVisu, 1, GL_FALSE, matrVisu );
+	glUniformMatrix4fv( locmatrModel, 1, GL_FALSE, matrModel );
+	glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj );
+	// (partie 1: ne pas oublier de calculer et donner une matrice pour les transformations des normales)
+	glUniformMatrix3fv( locmatrNormale, 1, GL_TRUE, glm::value_ptr( glm::inverse( glm::mat3( matrVisu.getMatr() * matrModel.getMatr() ) ) ) );
 
-   // partie 2: afficher la surface en mono ou en stéréo
+	// partie 2: afficher la surface en mono ou en stéréo
 
-   switch ( vue.affichageStereo )
-   {
-   case 0: // mono
-      definirProjection( 0, largeur_, hauteur_ );
-      glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj );
-      afficherModele();
-      break;
+	switch ( vue.affichageStereo )
+	{
+	case 0: // mono
+		definirProjection( 0, largeur_, hauteur_ );
+		glViewport( 0, 0, largeur_, hauteur_);
+		afficherModele();
+		break;
 
-   case 1: // stéréo anaglyphe
-      // partie 2: à modifier pour afficher en anaglyphe
-      definirProjection( 0, largeur_, hauteur_ );
-      glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj );
-      afficherModele();
-      break;
+	case 1: // stéréo anaglyphe
+		// partie 2: à modifier pour afficher en anaglyphe
+		definirProjection( -1, largeur_, hauteur_ );
+		glColorMask( GL_TRUE, GL_FALSE, GL_FALSE, GL_TRUE );
+		afficherModele();
 
-   case 2: // stéréo double
-      // partie 2: à modifier pour afficher en stéréo double
-      definirProjection( 0, largeur_, hauteur_ );
-      glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj );
-      afficherModele();
-      break;
-   }
+		glClear( GL_DEPTH_BUFFER_BIT );
+		definirProjection( +1, largeur_, hauteur_ );
+		glColorMask( GL_FALSE, GL_TRUE, GL_TRUE, GL_TRUE );
+		afficherModele();
+
+		glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
+		break;
+
+	case 2: // stéréo double
+		// partie 2: à modifier pour afficher en stéréo double
+		definirProjection( -1, largeur_, hauteur_ );
+		glViewport( 0, 0, largeur_/2, hauteur_);
+		afficherModele();
+
+		glClear( GL_DEPTH_BUFFER_BIT );
+		definirProjection( +1, largeur_, hauteur_ );
+		glViewport( largeur_/2, 0, largeur_/2, hauteur_);
+		afficherModele();
+		break;
+	}
 }
 
 // fonction de redimensionnement de la fenêtre graphique
