@@ -465,7 +465,24 @@ void FenetreTP::conclure()
 void definirProjection( int OeilMult, int w, int h ) // 0: mono, -1: oeil gauche, +1: oeil droit
 {
    // partie 2: utiliser plutôt Frustum() pour le stéréo
-   matrProj.Perspective( 35.0, (GLdouble) w / (GLdouble) h, vue.zavant, vue.zarriere );
+   switch(OeilMult)
+	{
+		case 0:
+			matrProj.Perspective(35.0, (GLdouble)w / (GLdouble)h, vue.zavant, vue.zarriere);
+			break;
+		default:
+			const GLdouble resolution = 100.0; // pixels par pouce
+			GLdouble decallage = OeilMult * vue.dip/2.0;
+			GLdouble degreProfondeur = vue.zavant / vue.zecran;
+			matrProj.Frustum( (-0.5 * w / resolution - decallage ) * degreProfondeur, 
+                     ( 0.5 * w / resolution - decallage ) * degreProfondeur,
+                     (-0.5 * h / resolution) * degreProfondeur,
+                     ( 0.5 * h / resolution) * degreProfondeur,
+                     vue.zavant, vue.zarriere);
+			matrProj.Translate( -decallage, 0.0, 0.0 );
+			glUniformMatrix4fv( locmatrProj, 1, GL_FALSE, matrProj );
+			break;
+   }
 }
 
 void afficherDecoration()

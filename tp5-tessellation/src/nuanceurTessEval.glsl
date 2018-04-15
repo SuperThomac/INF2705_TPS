@@ -127,10 +127,9 @@ void main( void )
 
 	vec3 N = vec3((FctMath(vec2(posModel.x + epsilon, posModel.y)) 
 				- FctMath(vec2(posModel.x - epsilon, posModel.y)))/(2*epsilon),
-				
 				 (FctMath(vec2(posModel.x, epsilon + posModel.y)) 
 				- FctMath(vec2(posModel.x, posModel.y - epsilon )))/(2*epsilon),-1);
-	N = normalize(N);
+   N = normalize(N);
 	
 
 #else
@@ -146,7 +145,7 @@ void main( void )
 				
 				 (FctText(vec2(posModel.x, epsilon + posModel.y)) 
 				- FctText(vec2(posModel.x, posModel.y - epsilon )))/(2*epsilon),-1);
-	N = normalize(N);
+	N = normalize(-N);
 	
 #endif
 

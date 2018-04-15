@@ -77,10 +77,8 @@ void main( void )
 
          // ajouter la contribution de la composante spéculaire
          // produit scalaire pour la réflexion spéculaire (selon Blinn)
-         //...
-         vec3 B = normalize(L + O);
-         float reflectivity = max(dot(B, N), 0.0);
-         coul += FrontMaterial.specular * LightSource.specular * pow(reflectivity, FrontMaterial.shininess); 
+         float reflectivity = max(0.0, dot(normalize(normalize(AttribsIn.lumiDir[i]) + normalize(AttribsIn.obsVec)), N));
+         coul += FrontMaterial.specular * LightSource.specular *pow(reflectivity, FrontMaterial.shininess);
       }
    }
 
